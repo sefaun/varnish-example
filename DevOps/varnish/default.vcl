@@ -19,36 +19,5 @@ sub vcl_deliver {
     set resp.http.X-Cache-Hits = obj.hits;
   }
 
-  if (resp.http.CR) {
-    set resp.http.Content-Range = resp.http.CR;
-    unset resp.http.CR;
-  }
-
   return (deliver);
-}
-
-sub vcl_recv {
-  if (req.http.Range ~ "bytes=") {
-    set req.http.x-range = req.http.Range;
-  }
-}
-
-sub vcl_hash {
-  if (req.http.x-range ~ "bytes=") {
-    hash_data(req.http.x-range);
-    unset req.http.Range;
-  }
-}
-
-sub vcl_backend_fetch {
-  if (bereq.http.x-range) {
-    set bereq.http.Range = bereq.http.x-range;
-  }
-}
-
-sub vcl_backend_response {
-  if (bereq.http.x-range ~ "bytes=" && beresp.status == 206) {
-    set beresp.ttl = 10m;
-    set beresp.http.CR = beresp.http.content-range;
-  }
 }
