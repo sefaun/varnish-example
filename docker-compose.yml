@@ -1,0 +1,33 @@
+version: '3.9'
+
+services:
+
+  varnish:
+    image: varnish:stable
+    container_name: varnish
+    restart: always
+    tmpfs:
+      - /var/lib/varnish:exec
+    ports:
+      - 6000:80
+    environment:
+      - VARNISH_SIZE=2G
+    command: -p default_keep=300
+    volumes:
+      - ./DevOps/varnish/default.vcl:/etc/varnish/default.vcl
+      - ./DevOps/varnish/varnish:/etc/default/varnish
+      - ./DevOps/varnish/varnish.service:/lib/systemd/system/varnish.service
+    depends_on:
+      - backend
+
+  backend:
+    container_name: backend
+    build:
+      context: ./DevOps/backend
+      dockerfile: Dockerfile
+    command: bash -c "npm i && rm -rf build && npm run build && nodemon ./build/index.js"
+    restart: always
+    ports:
+      - 5000:5000
+    volumes:
+      - ./:/home/backend
